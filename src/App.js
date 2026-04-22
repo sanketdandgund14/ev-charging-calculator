@@ -7,7 +7,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [battery, setBattery] = useState(60);
   const [history, setHistory] = useState([]);
-  const [darkMode, setDarkMode] = useState(true); // Theme State
+  const [darkMode, setDarkMode] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -39,68 +39,78 @@ export default function App() {
 
   const totalCost = (battery * 7.5).toFixed(2);
 
-  // Theme Colors
+  // Dynamic Theme Colors
   const theme = {
-    bg: darkMode ? "#050505" : "#f5f5f7",
+    bg: darkMode ? "#050505" : "#f0f2f5",
     card: darkMode ? "linear-gradient(145deg, #111, #080808)" : "#ffffff",
-    text: darkMode ? "#fff" : "#1d1d1f",
-    subText: darkMode ? "#666" : "#86868b",
-    border: darkMode ? "#222" : "#d2d2d7"
+    text: darkMode ? "#ffffff" : "#1c1c1e",
+    subText: darkMode ? "#666" : "#8e8e93",
+    border: darkMode ? "#222" : "#d1d1d6"
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, transition: "0.3s all", fontFamily: "sans-serif", padding: "40px 20px" }}>
+    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, transition: "0.3s all", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", padding: "40px 20px" }}>
       <div style={{ maxWidth: "450px", margin: "0 auto" }}>
         
-        {/* HEADER */}
+        {/* HEADER AREA */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "60px" }}>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: "800", letterSpacing: "-1px" }}>
+          <h2 style={{ fontSize: "1.4rem", fontWeight: "800", letterSpacing: "-1px", margin: 0 }}>
             ⚡ EV<span style={{ color: "#22c55e" }}>PRO</span>
           </h2>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            <button onClick={() => setDarkMode(!darkMode)} style={{ background: "transparent", border: "none", fontSize: "1.2rem", cursor: "pointer" }}>
+          <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
+            <button onClick={() => setDarkMode(!darkMode)} style={{ background: "transparent", border: "none", fontSize: "1.3rem", cursor: "pointer" }}>
               {darkMode ? "☀️" : "🌙"}
             </button>
             {user ? (
-              <button onClick={() => signOut(auth)} style={{ background: "rgba(128,128,128,0.1)", border: "none", color: theme.subText, padding: "8px 15px", borderRadius: "20px", cursor: "pointer" }}>Logout</button>
+              <button onClick={() => signOut(auth)} style={{ background: "rgba(150,150,150,0.1)", border: "none", color: theme.subText, padding: "8px 16px", borderRadius: "20px", cursor: "pointer", fontWeight: "600" }}>Logout</button>
             ) : (
-              <button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#22c55e", color: "#fff", border: "none", padding: "8px 20px", borderRadius: "20px", fontWeight: "bold", cursor: "pointer" }}>Login</button>
+              <button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#22c55e", color: "#fff", border: "none", padding: "10px 22px", borderRadius: "25px", fontWeight: "bold", cursor: "pointer", boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)" }}>Login</button>
             )}
           </div>
         </div>
 
-        {/* MAIN CONTENT (Conditional) */}
+        {/* --- THE GATEKEEPER LOGIC --- */}
         {!user ? (
-          <div style={{ textAlign: "center", marginTop: "100px" }}>
-            <h1 style={{ fontSize: "2rem", marginBottom: "15px" }}>Welcome to EV PRO</h1>
-            <p style={{ color: theme.subText, lineHeight: "1.6" }}>Log in to calculate your charging costs and track your history across all your devices.</p>
+          /* SHOW THIS ONLY IF NOT LOGGED IN */
+          <div style={{ textAlign: "center", marginTop: "80px", padding: "0 20px" }}>
+            <div style={{ fontSize: "4rem", marginBottom: "20px" }}>🔋</div>
+            <h1 style={{ fontSize: "2.2rem", fontWeight: "800", marginBottom: "15px" }}>Smart EV Tracking</h1>
+            <p style={{ color: theme.subText, fontSize: "1.1rem", lineHeight: "1.6", marginBottom: "30px" }}>
+              Calculate charging costs and keep a secure history of all your sessions in one place.
+            </p>
           </div>
         ) : (
+          /* SHOW THIS ONLY IF LOGGED IN */
           <>
-            {/* CALCULATOR CARD */}
-            <div style={{ background: theme.card, border: `1px solid ${theme.border}`, borderRadius: "28px", padding: "35px", textAlign: "center", boxShadow: darkMode ? "none" : "0 10px 30px rgba(0,0,0,0.05)", marginBottom: "40px" }}>
-              <p style={{ color: theme.subText, fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "1px" }}>Estimated Cost</p>
-              <h1 style={{ fontSize: "3.5rem", margin: "10px 0", color: "#22c55e", fontWeight: "800" }}>₹{totalCost}</h1>
-              <div style={{ margin: "30px 0" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", color: theme.subText, marginBottom: "10px" }}>
-                  <span>Battery</span><span>{battery} kWh</span>
+            <div style={{ background: theme.card, border: `1px solid ${theme.border}`, borderRadius: "28px", padding: "35px", textAlign: "center", boxShadow: darkMode ? "0 20px 40px rgba(0,0,0,0.4)" : "0 10px 30px rgba(0,0,0,0.05)", marginBottom: "40px" }}>
+              <p style={{ color: theme.subText, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: "600" }}>Estimated Cost</p>
+              <h1 style={{ fontSize: "3.8rem", margin: "10px 0", color: "#22c55e", fontWeight: "800" }}>₹{totalCost}</h1>
+              
+              <div style={{ margin: "35px 0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", color: theme.subText, marginBottom: "12px", fontSize: "0.95rem" }}>
+                  <span>Battery Capacity</span>
+                  <span style={{ color: theme.text, fontWeight: "bold" }}>{battery} kWh</span>
                 </div>
-                <input type="range" min="1" max="120" value={battery} onChange={(e) => setBattery(e.target.value)} style={{ width: "100%", accentColor: "#22c55e" }} />
+                <input type="range" min="1" max="120" value={battery} onChange={(e) => setBattery(e.target.value)} style={{ width: "100%", accentColor: "#22c55e", cursor: "pointer" }} />
               </div>
-              <button onClick={() => saveToHistory(totalCost)} style={{ width: "100%", background: "#22c55e", color: "#fff", border: "none", padding: "16px", borderRadius: "16px", fontWeight: "bold", cursor: "pointer" }}>Save Calculation</button>
+
+              <button onClick={() => saveToHistory(totalCost)} style={{ width: "100%", background: "#22c55e", color: "#fff", border: "none", padding: "18px", borderRadius: "18px", fontWeight: "800", fontSize: "1.1rem", cursor: "pointer", boxShadow: "0 8px 20px rgba(34, 197, 94, 0.2)" }}>
+                Save to History
+              </button>
             </div>
 
-            {/* HISTORY */}
             {history.length > 0 && (
               <div>
-                <h3 style={{ marginBottom: "20px", color: theme.subText }}>Recent Activity</h3>
+                <h3 style={{ marginBottom: "20px", fontSize: "1.1rem", color: theme.subText, paddingLeft: "5px" }}>Recent Activity</h3>
                 {history.map((item) => (
-                  <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: darkMode ? "#111" : "#fff", padding: "15px", borderRadius: "18px", marginBottom: "12px", border: `1px solid ${theme.border}` }}>
+                  <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: darkMode ? "rgba(255,255,255,0.03)" : "#fff", padding: "18px", borderRadius: "20px", marginBottom: "12px", border: `1px solid ${theme.border}` }}>
                     <div>
-                      <div style={{ fontWeight: "bold" }}>₹{item.cost}</div>
-                      <div style={{ fontSize: "0.7rem", color: theme.subText }}>{item.battery} kWh • {item.time?.toDate().toLocaleDateString('en-IN')}</div>
+                      <div style={{ fontWeight: "800", fontSize: "1.2rem" }}>₹{item.cost}</div>
+                      <div style={{ fontSize: "0.8rem", color: theme.subText, marginTop: "4px" }}>
+                        {item.battery} kWh • {item.time?.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </div>
                     </div>
-                    <button onClick={() => deleteItem(item.id)} style={{ background: "transparent", border: "none", color: "#ff4444", fontSize: "1.2rem", cursor: "pointer" }}>×</button>
+                    <button onClick={() => deleteItem(item.id)} style={{ background: "rgba(255,68,68,0.1)", border: "none", color: "#ff4444", width: "36px", height: "36px", borderRadius: "50%", cursor: "pointer", fontSize: "1.2rem", fontWeight: "bold" }}>×</button>
                   </div>
                 ))}
               </div>

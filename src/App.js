@@ -5,6 +5,54 @@ import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { collection, addDoc, query, where, getDocs, orderBy, deleteDoc, doc } from "firebase/firestore";
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 
+const GlobalStyles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;800&family=Outfit:wght@300;700&display=swap');
+
+    :root {
+      --accent: #22c55e;
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glow: 0 0 20px rgba(34, 197, 94, 0.2);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #000 !important;
+      letter-spacing: -0.02em;
+    }
+
+    .luxury-card {
+      background: var(--glass) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border) !important;
+      box-shadow: var(--glow);
+    }
+
+    .hero-text {
+      font-family: 'Outfit', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    input, select {
+      background: rgba(255,255,255,0.05) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+      outline: none;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+  `}</style>
+);
+
 const EV_PRESETS = [
   { name: "Nexon EV", battery: 40.5, icon: "🚗", efficiency: 6.5 },
   { name: "MG ZS EV", battery: 50.3, icon: "🚙", efficiency: 6.2 },
@@ -62,7 +110,8 @@ export default function App() {
 
   return (
     <Router>
-      <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, transition: "0.3s", fontFamily: "sans-serif" }}>
+      <GlobalStyles />
+      <div style={{ minHeight: "100vh", background: "#000", color: theme.text, transition: "0.3s" }}>
         
         {/* LOGOUT MODAL */}
         {showLogoutConfirm && (
@@ -114,30 +163,30 @@ export default function App() {
 }
 function LoginPage({ theme }) {
   return (
-    <div style={{ textAlign: "center", padding: "40px 20px" }}>
-      {/* Hero Image Box */}
-      <div style={{ background: "linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&q=80&w=1200')", height: "400px", borderRadius: "30px", backgroundSize: "cover", backgroundPosition: "center", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: "30px", border: "1px solid #333", padding: "20px" }}>
-        <h1 style={{ color: "#fff", fontSize: "3.5rem", fontWeight: "900", margin: 0 }}>EV PRO</h1>
-        <p style={{ color: "#22c55e", fontSize: "1.2rem", fontWeight: "bold", marginTop: "10px", textAlign: "center" }}>Empowering Indian Families with Smart Mobility</p>
-      </div>
-
-      {/* Narrative/Traditional Text */}
-      <div style={{ marginBottom: "30px" }}>
-        <h2 style={{ color: theme.text, fontSize: "2rem", fontWeight: "800", marginBottom: "10px" }}>Welcome Home</h2>
-        <p style={{ color: "#888", fontSize: "1rem", fontStyle: "italic", maxWidth: "450px", margin: "0 auto" }}>
-          An Indian family (Man, Woman, 2 Kids) in traditional attire seeing their new EV car and bike.
-        </p>
-      </div>
-
-      {/* Features & Action */}
-      <h3 style={{ fontWeight: "800", marginBottom: "15px" }}>Smart EV Tracking</h3>
-      <p style={{ color: "#666", marginBottom: "40px", maxWidth: "400px", margin: "0 auto 40px" }}>
-        Login to access your charging history, petrol savings, and find nearby charging stations.
-      </p>
+    <div style={{ textAlign: "center", padding: "0 20px", background: "radial-gradient(circle at top, #0a2e1a 0%, #000 70%)", minHeight: "90vh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       
-      <button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#22c55e", color: "white", padding: "18px 45px", border: "none", borderRadius: "50px", fontWeight: "900", fontSize: "1.2rem", cursor: "pointer", boxShadow: "0 10px 25px rgba(34, 197, 94, 0.4)", transition: "0.3s" }}>
-        LOGIN WITH GOOGLE
-      </button>
+      {/* Cinematic Hero Section */}
+      <div className="luxury-card" style={{ maxWidth: "800px", margin: "0 auto", padding: "60px 20px", borderRadius: "40px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "5px", background: "linear-gradient(90deg, transparent, #22c55e, transparent)" }}></div>
+        
+        <p className="hero-text" style={{ fontSize: "0.8rem", color: "#22c55e", marginBottom: "10px" }}>The Future of Mobility</p>
+        <h1 className="hero-text" style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)", fontWeight: "800", margin: 0, lineHeight: "1" }}>
+          EV PRO
+        </h1>
+        <p style={{ color: "#888", fontSize: "1.1rem", marginTop: "20px", maxWidth: "500px", margin: "20px auto" }}>
+          Track, calculate, and optimize your transition to electric energy with precision.
+        </p>
+        
+        <div style={{ marginTop: "40px" }}>
+          <button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#fff", color: "#000", padding: "20px 50px", border: "none", borderRadius: "100px", fontWeight: "800", fontSize: "1rem", cursor: "pointer", transition: "0.4s" }} onMouseOver={e => e.target.style.background = "#22c55e"}>
+            ACCESS DASHBOARD
+          </button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: "40px", opacity: 0.4 }}>
+        <p style={{ fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase" }}>Designed for the Modern Indian Household</p>
+      </div>
     </div>
   );
 }

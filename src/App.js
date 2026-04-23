@@ -112,19 +112,30 @@ export default function App() {
     </Router>
   );
 }
-
 function LoginPage({ theme }) {
   return (
     <div style={{ textAlign: "center", padding: "40px 20px" }}>
-      <div style={{ background: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1619641782822-2335804bf046?auto=format&fit=crop&q=80&w=1000')", height: "350px", borderRadius: "30px", backgroundSize: "cover", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "40px", border: "1px solid #333" }}>
-        <div style={{ padding: "20px" }}>
-          <h1 style={{ color: "#fff", fontSize: "2.5rem", fontWeight: "900" }}>Welcome Home</h1>
-          <p style={{ color: "#eee" }}>An Indian family (Man, Woman, 2 Kids) in traditional attire seeing their new EV car and bike.</p>
-        </div>
+      {/* Hero Image Box */}
+      <div style={{ background: "linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&q=80&w=1200')", height: "400px", borderRadius: "30px", backgroundSize: "cover", backgroundPosition: "center", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: "30px", border: "1px solid #333", padding: "20px" }}>
+        <h1 style={{ color: "#fff", fontSize: "3.5rem", fontWeight: "900", margin: 0 }}>EV PRO</h1>
+        <p style={{ color: "#22c55e", fontSize: "1.2rem", fontWeight: "bold", marginTop: "10px", textAlign: "center" }}>Empowering Indian Families with Smart Mobility</p>
       </div>
-      <h2 style={{ fontWeight: "800", marginBottom: "15px" }}>Smart EV Tracking</h2>
-      <p style={{ color: "#666", marginBottom: "40px", maxWidth: "400px", margin: "0 auto 40px" }}>Login to access your charging history, petrol savings, and find nearby charging stations.</p>
-      <button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#22c55e", color: "white", padding: "20px 40px", border: "none", borderRadius: "50px", fontWeight: "900", fontSize: "1.2rem", cursor: "pointer", boxShadow: "0 10px 20px rgba(34, 197, 94, 0.3)" }}>
+
+      {/* Narrative/Traditional Text */}
+      <div style={{ marginBottom: "30px" }}>
+        <h2 style={{ color: theme.text, fontSize: "2rem", fontWeight: "800", marginBottom: "10px" }}>Welcome Home</h2>
+        <p style={{ color: "#888", fontSize: "1rem", fontStyle: "italic", maxWidth: "450px", margin: "0 auto" }}>
+          An Indian family (Man, Woman, 2 Kids) in traditional attire seeing their new EV car and bike.
+        </p>
+      </div>
+
+      {/* Features & Action */}
+      <h3 style={{ fontWeight: "800", marginBottom: "15px" }}>Smart EV Tracking</h3>
+      <p style={{ color: "#666", marginBottom: "40px", maxWidth: "400px", margin: "0 auto 40px" }}>
+        Login to access your charging history, petrol savings, and find nearby charging stations.
+      </p>
+      
+      <button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#22c55e", color: "white", padding: "18px 45px", border: "none", borderRadius: "50px", fontWeight: "900", fontSize: "1.2rem", cursor: "pointer", boxShadow: "0 10px 25px rgba(34, 197, 94, 0.4)", transition: "0.3s" }}>
         LOGIN WITH GOOGLE
       </button>
     </div>

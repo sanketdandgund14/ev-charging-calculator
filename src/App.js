@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import { auth, googleProvider, db } from "./firebase";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { collection, addDoc, query, where, getDocs, orderBy, deleteDoc, doc } from "firebase/firestore";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 
+// --- SHARED DATA ---
 const EV_PRESETS = [
   { name: "Nexon EV", battery: 40.5, icon: "🚗", efficiency: 6.5 },
   { name: "MG ZS EV", battery: 50.3, icon: "🚙", efficiency: 6.2 },
   { name: "Ioniq 5", battery: 72.6, icon: "⚡", efficiency: 6.8 },
   { name: "BMW iX", battery: 111.5, icon: "🏎", efficiency: 5.9 },
-  { name: "Ola S1", battery: 3.97, icon: "🛵", efficiency: 55 },
+  { name: "Ola S1 Pro", battery: 4.0, icon: "🛵", efficiency: 55 },
 ];
 
 const TARIFF_PRESETS = [
@@ -17,199 +20,185 @@ const TARIFF_PRESETS = [
   { label: "Public DC Fast", rate: 22.0 },
 ];
 
-function StatCard({ icon, title, value, sub, dark }) {
-  return (
-    <div style={{ flex: 1, background: dark ? "rgba(255,255,255,0.03)" : "#fff", borderRadius: 16, padding: "15px", border: dark ? "1px solid #222" : "1px solid #e5e7eb", textAlign: "center" }}>
-      <div style={{ fontSize: 22, marginBottom: 4 }}>{icon}</div>
-      <div style={{ color: dark ? "#666" : "#8e8e93", fontSize: 10, textTransform: "uppercase", fontWeight: "bold" }}>{title}</div>
-      <div style={{ color: dark ? "#fff" : "#1c1c1e", fontSize: 16, fontWeight: 800 }}>{value}</div>
-      {sub && <div style={{ color: "#4ade80", fontSize: 9, marginTop: 2 }}>{sub}</div>}
-    </div>
-  );
-}
-
+// --- MAIN APP COMPONENT ---
 export default function App() {
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState([]);
   const [dark, setDark] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Shared State for Calculator & Analytics
   const [battery, setBattery] = useState(40.5);
   const [fromPct, setFromPct] = useState(20);
   const [toPct, setToPct] = useState(100);
   const [tariffIdx, setTariffIdx] = useState(0);
   const [activePreset, setActivePreset] = useState(0);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // Safety Feature State
+  const [petrolMileage, setPetrolMileage] = useState(15);
+  const [petrolPrice, setPetrolPrice] = useState(102);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) fetchHistory(currentUser.uid);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      if (u) fetchHistory(u.uid);
     });
     return () => unsubscribe();
   }, []);
 
   const fetchHistory = async (uid) => {
     if (!db) return;
-    try {
-      const q = query(collection(db, "calculations"), where("userId", "==", uid), orderBy("time", "desc"));
-      const snapshot = await getDocs(q);
-      setHistory(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (e) { console.error("History fetch error", e); }
+    const q = query(collection(db, "calculations"), where("userId", "==", uid), orderBy("time", "desc"));
+    const snapshot = await getDocs(q);
+    setHistory(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
   };
 
-  const saveToHistory = async (cost) => {
-    if (!user) return;
-    try {
-      await addDoc(collection(db, "calculations"), {
-        userId: user.uid,
-        cost,
-        battery,
-        car: EV_PRESETS[activePreset]?.name || "Custom",
-        time: new Date()
-      });
-      fetchHistory(user.uid);
-    } catch (e) { alert(e.message); }
+  const theme = {
+    bg: dark ? "#050505" : "#f5f5f7",
+    card: dark ? "#111" : "#fff",
+    text: dark ? "#fff" : "#111",
+    border: dark ? "#222" : "#ddd"
   };
 
-  const deleteItem = async (id) => {
-    try {
-      await deleteDoc(doc(db, "calculations", id));
-      fetchHistory(user.uid);
-    } catch (e) { console.error(e); }
-  };
+  return (
+    <Router>
+      <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, transition: "0.3s", fontFamily: "sans-serif" }}>
+        
+        {/* LOGOUT SAFETY MODAL */}
+        {showLogoutConfirm && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
+            <div style={{ background: theme.card, padding: "30px", borderRadius: "24px", textAlign: "center", maxWidth: "300px", border: `1px solid ${theme.border}` }}>
+              <h3>Logout?</h3>
+              <p style={{ color: "#666", marginBottom: "20px" }}>End your secure session?</p>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button onClick={() => setShowLogoutConfirm(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "#333", color: "#fff" }}>No</button>
+                <button onClick={() => signOut(auth).then(() => setShowLogoutConfirm(false))} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "#ff4444", color: "white", fontWeight: "bold" }}>Yes</button>
+              </div>
+            </div>
+          </div>
+        )}
 
-  const handleLogout = () => {
-    signOut(auth);
-    setShowLogoutConfirm(false);
-  };
+        {/* PERSISTENT NAVBAR */}
+        <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px 20px", borderBottom: `1px solid ${theme.border}`, background: theme.card }}>
+          <h2 style={{ fontWeight: "900", margin: 0 }}>⚡ EV PRO</h2>
+          <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+            <Link to="/" style={{ color: "#22c55e", textDecoration: "none", fontWeight: "bold" }}>Calc</Link>
+            <Link to="/analytics" style={{ color: theme.text, textDecoration: "none", fontWeight: "bold" }}>Stats</Link>
+            <button onClick={() => setDark(!dark)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem" }}>{dark ? "☀️" : "🌙"}</button>
+            {user && <button onClick={() => setShowLogoutConfirm(true)} style={{ background: "#333", border: "none", color: "white", padding: "5px 12px", borderRadius: "15px" }}>Logout</button>}
+          </div>
+        </nav>
+
+        <Routes>
+          <Route path="/" element={
+            <CalculatorPage 
+              user={user} history={history} battery={battery} setBattery={setBattery}
+              fromPct={fromPct} setFromPct={setFromPct} toPct={toPct} setToPct={setToPct}
+              tariffIdx={tariffIdx} setTariffIdx={setTariffIdx}
+              activePreset={activePreset} setActivePreset={setActivePreset}
+              petrolMileage={petrolMileage} setPetrolMileage={setPetrolMileage}
+              petrolPrice={petrolPrice} setPetrolPrice={setPetrolPrice}
+              fetchHistory={fetchHistory} theme={theme} dark={dark}
+            />
+          } />
+          <Route path="/analytics" element={
+            <AnalyticsPage history={history} theme={theme} dark={dark} petrolMileage={petrolMileage} petrolPrice={petrolPrice} />
+          } />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+// --- PAGE 1: CALCULATOR ---
+function CalculatorPage({ user, history, battery, setBattery, fromPct, setFromPct, toPct, setToPct, tariffIdx, setTariffIdx, activePreset, setActivePreset, petrolMileage, setPetrolMileage, petrolPrice, setPetrolPrice, fetchHistory, theme, dark }) {
+  const navigate = useNavigate();
 
   const rate = TARIFF_PRESETS[tariffIdx].rate;
   const chargeNeeded = Math.max(0, toPct - fromPct);
   const energyKWh = (battery * chargeNeeded) / 100;
   const totalCost = (energyKWh * rate).toFixed(2);
-  
-  const efficiency = EV_PRESETS[activePreset]?.efficiency || 6.5;
-  const estRange = (energyKWh * efficiency).toFixed(0);
-  const co2Saved = (energyKWh * 0.74).toFixed(1);
-  const petrolCostEquivalent = (estRange / 15) * 102;
-  const savings = (petrolCostEquivalent - totalCost).toFixed(0);
 
-  const theme = {
-    bg: dark ? "#050505" : "#f5f5f7",
-    card: dark ? "#111" : "#ffffff",
-    text: dark ? "#fff" : "#1d1d1f",
-    border: dark ? "#222" : "#d2d2d7"
+  const saveToHistory = async () => {
+    if (!user) return;
+    await addDoc(collection(db, "calculations"), {
+      userId: user.uid, cost: totalCost, battery, car: EV_PRESETS[activePreset].name, time: new Date()
+    });
+    fetchHistory(user.uid);
+    navigate("/analytics"); // Auto-navigate to show the new graph point!
   };
 
-  return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "sans-serif", padding: "20px", transition: "0.3s" }}>
-      <div style={{ maxWidth: "500px", margin: "0 auto" }}>
-        
-        {/* LOGOUT OVERLAY (Safety confirmation) */}
-        {showLogoutConfirm && (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
-            <div style={{ background: theme.card, padding: "30px", borderRadius: "24px", border: `1px solid ${theme.border}`, textAlign: "center", maxWidth: "320px", width: "100%" }}>
-              <h3 style={{ margin: "0 0 10px 0" }}>Logout?</h3>
-              <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "20px" }}>Are you sure you want to end your session?</p>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button onClick={() => setShowLogoutConfirm(false)} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: "#333", color: "#fff", cursor: "pointer" }}>Cancel</button>
-                <button onClick={handleLogout} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: "#ff4444", color: "#fff", fontWeight: "bold", cursor: "pointer" }}>Yes, Logout</button>
-              </div>
-            </div>
-          </div>
-        )}
+  if (!user) return <div style={{ textAlign: "center", marginTop: "100px" }}><h1>Welcome to EV PRO</h1><button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#22c55e", color: "white", padding: "15px 30px", border: "none", borderRadius: "20px", fontWeight: "bold", fontSize: "1.2rem" }}>Login with Google</button></div>;
 
-        {/* HEADER */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px" }}>
-          <h2 style={{ fontWeight: "900", letterSpacing: "-1px" }}>⚡ EV<span style={{ color: "#22c55e" }}>PRO</span></h2>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            <button onClick={() => setDark(!dark)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}>{dark ? "☀️" : "🌙"}</button>
-            {user ? (
-              <button onClick={() => setShowLogoutConfirm(true)} style={{ background: "#333", color: "#fff", border: "none", padding: "8px 15px", borderRadius: "20px", fontSize: "0.8rem", cursor: "pointer" }}>Logout</button>
-            ) : (
-              <button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#22c55e", color: "#fff", border: "none", padding: "8px 20px", borderRadius: "20px", fontWeight: "bold", cursor: "pointer" }}>Login</button>
-            )}
-          </div>
+  return (
+    <div style={{ maxWidth: "500px", margin: "0 auto", padding: "20px" }}>
+      {/* Car Selector */}
+      <div style={{ display: "flex", gap: "10px", overflowX: "auto", marginBottom: "20px", paddingBottom: "10px" }}>
+        {EV_PRESETS.map((ev, i) => (
+          <button key={i} onClick={() => {setActivePreset(i); setBattery(ev.battery);}} style={{ minWidth: "100px", padding: "10px", borderRadius: "15px", border: activePreset === i ? "2px solid #22c55e" : `1px solid ${theme.border}`, background: theme.card, color: theme.text }}>
+            {ev.icon} {ev.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Calculator Card */}
+      <div style={{ background: theme.card, border: `1px solid ${theme.border}`, borderRadius: "30px", padding: "30px", textAlign: "center", marginBottom: "20px" }}>
+        <h1 style={{ fontSize: "4rem", color: "#22c55e", fontWeight: "900" }}>₹{totalCost}</h1>
+        <input type="range" min="0" max="100" value={fromPct} onChange={e => setFromPct(e.target.value)} style={{ width: "100%", accentColor: "#22c55e" }} />
+        <p style={{ opacity: 0.6 }}>Charge needed: {chargeNeeded}%</p>
+        
+        {/* Petrol Inputs */}
+        <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+          <input type="number" value={petrolPrice} onChange={e => setPetrolPrice(e.target.value)} placeholder="Petrol Price" style={{ flex: 1, padding: "10px", borderRadius: "10px", background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text }} />
+          <input type="number" value={petrolMileage} onChange={e => setPetrolMileage(e.target.value)} placeholder="Mileage" style={{ flex: 1, padding: "10px", borderRadius: "10px", background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text }} />
         </div>
 
-        {!user ? (
-          <div style={{ textAlign: "center", marginTop: "100px" }}>
-            <div style={{ fontSize: "4rem", marginBottom: "20px" }}>🔌</div>
-            <h1>Smart EV Tracking</h1>
-            <p style={{ color: "#666" }}>Login to calculate costs and compare petrol savings.</p>
-          </div>
-        ) : (
-          <>
-            {/* CAR SELECTOR */}
-            <div style={{ display: "flex", gap: "10px", overflowX: "auto", marginBottom: "20px", paddingBottom: "10px" }}>
-              {EV_PRESETS.map((ev, i) => (
-                <button key={i} onClick={() => {setActivePreset(i); setBattery(ev.battery);}} style={{ 
-                  minWidth: "110px", padding: "12px", borderRadius: "18px", border: activePreset === i ? "2px solid #22c55e" : `1px solid ${theme.border}`,
-                  background: theme.card, color: theme.text, cursor: "pointer"
-                }}>
-                  <div style={{ fontSize: "1.4rem" }}>{ev.icon}</div>
-                  <div style={{ fontSize: "0.7rem", fontWeight: "bold", marginTop: "4px" }}>{ev.name}</div>
-                </button>
-              ))}
-            </div>
+        <button onClick={saveToHistory} style={{ width: "100%", background: "#22c55e", color: "white", padding: "18px", borderRadius: "18px", border: "none", marginTop: "20px", fontWeight: "bold" }}>Save & View Stats</button>
+      </div>
+    </div>
+  );
+}
 
-            {/* MAIN CALCULATOR */}
-            <div style={{ background: theme.card, border: `1px solid ${theme.border}`, borderRadius: "30px", padding: "35px", textAlign: "center", marginBottom: "20px" }}>
-              <p style={{ color: "#666", fontSize: "0.75rem", fontWeight: "bold", letterSpacing: "1px" }}>ESTIMATED CHARGING COST</p>
-              <h1 style={{ fontSize: "4.5rem", margin: "10px 0", color: "#22c55e", fontWeight: "900" }}>₹{totalCost}</h1>
-              
-              <div style={{ margin: "25px 0", textAlign: "left" }}>
-                <label style={{ fontSize: "0.8rem", color: "#666" }}>Battery Capacity: {battery} kWh</label>
-                <input type="range" min="1" max="120" value={battery} onChange={e => {setBattery(e.target.value); setActivePreset(null);}} style={{ width: "100%", accentColor: "#22c55e", cursor: "pointer" }} />
-                
-                <div style={{ display: "flex", gap: "15px", marginTop: "15px" }}>
-                   <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: "0.7rem", color: "#666" }}>From {fromPct}%</label>
-                      <input type="range" min="0" max="99" value={fromPct} onChange={e => setFromPct(e.target.value)} style={{ width: "100%", accentColor: "#4ade80" }} />
-                   </div>
-                   <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: "0.7rem", color: "#666" }}>To {toPct}%</label>
-                      <input type="range" min="1" max="100" value={toPct} onChange={e => setToPct(e.target.value)} style={{ width: "100%", accentColor: "#22c55e" }} />
-                   </div>
-                </div>
-              </div>
+// --- PAGE 2: ANALYTICS ---
+function AnalyticsPage({ history, theme, dark, petrolMileage, petrolPrice }) {
+  const chartData = history.slice(0, 10).reverse().map(item => {
+    const cost = parseFloat(item.cost);
+    const range = (cost / 7.5) * 6.5; // Estimated range
+    const petrolCost = (range / petrolMileage) * petrolPrice;
+    return {
+      name: new Date(item.time?.toDate()).toLocaleDateString('en-IN', { day: 'numeric' }),
+      EV: cost,
+      Petrol: Math.round(petrolCost),
+      CO2: (cost * 0.1).toFixed(1)
+    };
+  });
 
-              <select value={tariffIdx} onChange={e => setTariffIdx(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "12px", background: theme.bg, color: theme.text, border: `1px solid ${theme.border}`, marginBottom: "20px" }}>
-                {TARIFF_PRESETS.map((t, i) => <option key={i} value={i}>{t.label} (₹{t.rate}/unit)</option>)}
-              </select>
+  return (
+    <div style={{ maxWidth: "600px", margin: "0 auto", padding: "20px" }}>
+      <h2 style={{ textAlign: "center" }}>Savings & Impact</h2>
+      
+      <div style={{ background: theme.card, padding: "20px", borderRadius: "20px", border: `1px solid ${theme.border}`, marginBottom: "20px" }}>
+        <p style={{ fontSize: "0.8rem", color: "#666" }}>PETROL VS EV COST</p>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={dark ? "#222" : "#eee"} />
+            <XAxis dataKey="name" stroke={theme.text} />
+            <YAxis stroke={theme.text} />
+            <Tooltip contentStyle={{ background: theme.card }} />
+            <Legend />
+            <Line type="monotone" dataKey="Petrol" stroke="#ff4444" strokeWidth={3} />
+            <Line type="monotone" dataKey="EV" stroke="#22c55e" strokeWidth={3} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
-              <button onClick={() => saveToHistory(totalCost)} style={{ width: "100%", background: "#22c55e", color: "#fff", padding: "18px", borderRadius: "18px", border: "none", fontWeight: "bold", fontSize: "1.1rem", cursor: "pointer" }}>
-                Save Session
-              </button>
-            </div>
-
-            {/* QUICK STATS */}
-            <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-               <StatCard dark={dark} icon="📍" title="Range" value={`${estRange} km`} sub={`+${chargeNeeded}% charge`} />
-               <StatCard dark={dark} icon="⛽" title="Saved" value={`₹${savings}`} sub="vs Petrol" />
-               <StatCard dark={dark} icon="🌱" title="CO2" value={`${co2Saved}kg`} sub="Environment" />
-            </div>
-
-            <button onClick={() => window.open("https://www.google.com/maps/search/ev+charging+station+near+me", "_blank")} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "1px solid #22c55e", color: "#22c55e", background: "transparent", fontWeight: "bold", marginBottom: "30px", cursor: "pointer" }}>
-              🗺️ Find Charging Stations Near Me
-            </button>
-
-            {/* HISTORY */}
-            {history.length > 0 && (
-              <div style={{ marginTop: "20px" }}>
-                <h4 style={{ marginBottom: "15px", opacity: 0.6 }}>Recent Activity</h4>
-                {history.map(item => (
-                  <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px", background: theme.card, border: `1px solid ${theme.border}`, marginBottom: "10px", borderRadius: "16px" }}>
-                    <div>
-                      <div style={{ fontWeight: "800", fontSize: "1.1rem" }}>₹{item.cost}</div>
-                      <div style={{ fontSize: "0.7rem", color: "#666" }}>{item.car} • {item.battery}kWh • {item.time?.toDate().toLocaleDateString('en-IN')}</div>
-                    </div>
-                    <button onClick={() => deleteItem(item.id)} style={{ color: "#ff4444", border: "none", background: "none", fontSize: "1.3rem", cursor: "pointer" }}>×</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+      <div style={{ background: theme.card, padding: "20px", borderRadius: "20px", border: `1px solid ${theme.border}` }}>
+        <p style={{ fontSize: "0.8rem", color: "#666" }}>CO2 SAVED (KG)</p>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={chartData}>
+            <XAxis dataKey="name" hide />
+            <Tooltip />
+            <Area type="monotone" dataKey="CO2" stroke="#22c55e" fill="#22c55e33" />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

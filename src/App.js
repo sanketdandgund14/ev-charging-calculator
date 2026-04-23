@@ -178,9 +178,14 @@ function LoginPage({ theme }) {
         </p>
         
         <div style={{ marginTop: "40px" }}>
-          <button onClick={() => signInWithPopup(auth, googleProvider)} style={{ background: "#fff", color: "#000", padding: "20px 50px", border: "none", borderRadius: "100px", fontWeight: "800", fontSize: "1rem", cursor: "pointer", transition: "0.4s" }} onMouseOver={e => e.target.style.background = "#22c55e"}>
-            ACCESS DASHBOARD
-          </button>
+          <button 
+  onClick={() => signInWithPopup(auth, googleProvider)} 
+  onMouseOver={e => e.target.style.background = "#22c55e"}
+  onMouseOut={e => e.target.style.background = "#ffffff"}
+  style={{ background: "#fff", color: "#000", padding: "20px 50px", border: "none", borderRadius: "100px", fontWeight: "800", fontSize: "1rem", cursor: "pointer", transition: "0.4s" }}
+>
+  ACCESS DASHBOARD
+</button>
         </div>
       </div>
 
@@ -218,7 +223,7 @@ function CalculatorPage({ user, history, battery, setBattery, fromPct, setFromPc
 
       <div style={{ background: theme.card, borderRadius: "30px", padding: "35px", border: `1px solid ${theme.border}`, marginBottom: "25px" }}>
         <p style={{ fontSize: "0.8rem", opacity: 0.5 }}>CHARGING COST</p>
-        <h1 style={{ fontSize: "4.5rem", color: "#22c55e", fontWeight: "900", margin: "10px 0" }}>₹{totalCost}</h1>
+        <h1 style={{ fontSize: "4.5rem", color: "#22c55e", fontWeight: "900", margin: "10px 0",animation: "fadeIn 2s ease-out" }}>₹{totalCost}</h1>
         
         <select value={tariffIdx} onChange={e => setTariffIdx(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "12px", background: theme.bg, color: theme.text, border: `1px solid ${theme.border}`, marginBottom: "20px" }}>
           {TARIFF_PRESETS.map((t, i) => <option key={i} value={i}>{t.label} (₹{t.rate}/unit)</option>)}

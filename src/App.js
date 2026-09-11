@@ -7,6 +7,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, AreaChart, Area, BarChart, Bar
 } from "recharts";
+import ChatAgent from "./ChatAgent";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 
@@ -264,6 +265,7 @@ export default function App() {
           <Route path="/tco" element={user ? <TCOPage theme={theme} dark={dark} /> : <Navigate to="/" />} />
           <Route path="/analytics" element={user ? <AnalyticsPage history={history} theme={theme} dark={dark} petrolMileage={petrolMileage} petrolPrice={petrolPrice} deleteItem={deleteItem} user={user} /> : <Navigate to="/" />} />
         </Routes>
+                    {user && <ChatAgent theme={theme} />}
       </div>
     </Router>
   );

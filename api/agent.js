@@ -96,6 +96,7 @@ module.exports = async (req, res) => {
 
     const data = await response.json();
     if (!response.ok) {
+      console.error("Anthropic API error:", JSON.stringify(data));
       res.status(response.status).json(data);
       return;
     }

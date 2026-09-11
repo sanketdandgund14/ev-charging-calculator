@@ -20,7 +20,11 @@ async function runAgentTurn(messages, setMessages) {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || "Agent error");
+      const msg =
+        typeof data.error === "string"
+          ? data.error
+          : data.error?.message || JSON.stringify(data.error) || `Request failed (${res.status})`;
+      throw new Error(msg);
     }
 
     // Add Claude's turn (may contain text + tool_use blocks) to history
